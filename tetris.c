@@ -12,129 +12,193 @@
 #define CSI(x, t) "\x1B["#x#t
 #define SGR(x) CSI(x, m)
 
-#define MAX_TETROMINO_ARR_LEN 16
-#define NUM_TETROMINOES 7
+#define MIN(x, y) (x < y ? x : y)
+#define MAX(x, y) (x > y ? x : y)
 
+#define MAX_TETROMINO_DATA_LEN 36
 
-typedef enum state {
-    ACTIVE_STATE,
-    LINE_CLEAR_STATE,
-    LOSE_STATE,
-} state_t;
+typedef struct tetromino_t {
+    const uint8_t data[MAX_TETROMINO_DATA_LEN];
+    const unsigned int dim, len;
+    const int start_i, start_j;
 
-typedef struct tetromino {
-    const int id;
-
-    uint8_t arr[MAX_TETROMINO_ARR_LEN];
-    const unsigned int dim;
-
-    int i, j;
+    const unsigned int color_idx;
 } tetromino_t;
 
 const tetromino_t I_TETR = {
-    0,
-    {
-        0, 0, 0, 0,
-        1, 1, 1, 1,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-    }, 4,
-    -1, 3,
-};
+    .data = {
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0x00, 0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF, 0xFF,
 
-const tetromino_t J_TETR = {
-    1,
-    {
-        1, 0, 0,
-        1, 1, 1,
-        0, 0, 0,
-    }, 3,
-    0, 3,
-};
+        0xFF, 0xFF, 0x00, 0xFF,
+        0xFF, 0xFF, 0x00, 0xFF,
+        0xFF, 0xFF, 0x00, 0xFF,
+        0xFF, 0xFF, 0x00, 0xFF,
+    },
+    .dim = 4, .len = 2,
+    .start_i = -2, .start_j = 3,
 
-const tetromino_t L_TETR = {
-    2,
-    {
-        0, 0, 1,
-        1, 1, 1,
-        0, 0, 0,
-    }, 3,
-    0, 3,
+    .color_idx = 0,
 };
 
 const tetromino_t O_TETR = {
-    3,
-    {
-        1, 1,
-        1, 1,
-    }, 2,
-    0, 4,
+    .data = {
+        0x00, 0x00,
+        0x00, 0x00,
+    },
+    .dim = 2, .len = 1,
+    .start_i = 0, .start_j = 4,
+
+    .color_idx = 0,
+};
+
+const tetromino_t J_TETR = {
+    .data = {
+        0xFF, 0xFF, 0xFF,
+        0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0x00,
+
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+        0x00, 0x00, 0xFF,
+
+        0x00, 0xFF, 0xFF,
+        0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF,
+
+        0xFF, 0x00, 0x00,
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+    },
+    .dim = 3, .len = 4,
+    .start_i = -1, .start_j = 3,
+
+    .color_idx = 1,
+};
+
+const tetromino_t L_TETR = {
+    .data = {
+        0xFF, 0xFF, 0xFF,
+        0x00, 0x00, 0x00,
+        0x00, 0xFF, 0xFF,
+
+        0x00, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+
+        0xFF, 0xFF, 0x00,
+        0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF,
+
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0x00,
+    },
+    .dim = 3, .len = 4,
+    .start_i = -1, .start_j = 3,
+
+    .color_idx = 2,
 };
 
 const tetromino_t S_TETR = {
-    4,
-    {
-        0, 1, 1,
-        1, 1, 0,
-        0, 0, 0,
-    }, 3,
-    0, 3,
+    .data = {
+        0xFF, 0xFF, 0xFF,
+        0xFF, 0x00, 0x00,
+        0x00, 0x00, 0xFF,
+
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0x00,
+        0xFF, 0xFF, 0x00,
+    },
+    .dim = 3, .len = 2,
+    .start_i = -1, .start_j = 3,
+
+    .color_idx = 1,
 };
 
 const tetromino_t T_TETR = {
-    5,
-    {
-        0, 1, 0,
-        1, 1, 1,
-        0, 0, 0,
-    }, 3,
-    0, 3,
+    .data = {
+        0xFF, 0xFF, 0xFF,
+        0x00, 0x00, 0x00,
+        0xFF, 0x00, 0xFF,
+
+        0xFF, 0x00, 0xFF,
+        0x00, 0x00, 0xFF,
+        0xFF, 0x00, 0xFF,
+
+        0xFF, 0x00, 0xFF,
+        0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF,
+
+        0xFF, 0x00, 0xFF,
+        0xFF, 0x00, 0x00,
+        0xFF, 0x00, 0xFF,
+    },
+    .dim = 3, .len = 4,
+    .start_i = -1, .start_j = 3,
+
+    .color_idx = 0,
 };
 
 const tetromino_t Z_TETR = {
-    6,
-    {
-        1, 1, 0,
-        0, 1, 1,
-        0, 0, 0,
-    }, 3,
-    0, 3,
+    .data = {
+        0xFF, 0xFF, 0xFF,
+        0x00, 0x00, 0xFF,
+        0xFF, 0x00, 0x00,
+
+        0xFF, 0xFF, 0x00,
+        0xFF, 0x00, 0x00,
+        0xFF, 0x00, 0xFF,
+    },
+    .dim = 3, .len = 2,
+    .start_i = -1, .start_j = 3,
+
+    .color_idx = 2,
 };
+
+#define NUM_TETROMINOES 7
+#define IS_EMPTY(x) (x == 0xFF)
 
 const tetromino_t * const TETR_LIST[] = {
     &I_TETR,
+    &O_TETR,
     &J_TETR,
     &L_TETR,
-    &O_TETR,
     &S_TETR,
     &T_TETR,
     &Z_TETR,
 };
 
-const char * const COLOR_LUT[] = {
-    NULL,
-
-    SGR(106),
-    SGR(104),
-    SGR(43),
-    SGR(103),
-    SGR(102),
-    SGR(105),
-    SGR(101),
+const unsigned int COLOR_LUT[] = {
+    107, 104, 106,
+    107, 42, 102,
+    107, 45, 105,
+    107, 104, 102,
+    107, 101, 102,
+    107, 104, 102,
+    107, 101, 100,
+    107, 104, 41,
+    107, 104, 101,
+    107, 101, 43,
 };
 
-
-state_t g_state;
+enum {
+    ACTIVE_STATE,
+    LINE_CLEAR_STATE,
+    LOSE_STATE,
+} g_state;
 
 #define MATRIX_HEIGHT 20
 #define MATRIX_WIDTH 10
 #define MATRIX_SIZE (MATRIX_HEIGHT * MATRIX_WIDTH)
 uint8_t g_matrix[MATRIX_SIZE];
+#define G_MATRIX_VAL(i, j) *(g_matrix + (i) * MATRIX_WIDTH + (j))
 
-tetromino_t g_active_tetr;
-
-unsigned int g_bag[NUM_TETROMINOES];
-unsigned int g_bag_i;
+const tetromino_t *g_tetr, *g_next_tetr;
+int g_tetr_i, g_tetr_j, g_tetr_r;
+#define TETR_ARR_VAL(t, i, j, r) *(t->data + (r) * t->dim * t->dim + (i) * t->dim + (j))
 
 #define GRAVITY 48
 int g_gravity_ctdown;
@@ -144,17 +208,16 @@ bool g_clears[MATRIX_HEIGHT];
 #define LINE_CLEAR_FRAMES 25
 int g_clear_ctdown;
 
-
-bool collision()
+bool collision(int di, int dj, int dr)
 {
-    for (unsigned int ti = 0; ti < g_active_tetr.dim; ti++) {
-        for (unsigned int tj = 0; tj < g_active_tetr.dim; tj++) {
-            uint8_t tv = g_active_tetr.arr[ti * g_active_tetr.dim + tj];
+    int r = (g_tetr_r + dr) % g_tetr->len;
 
-            int mi = g_active_tetr.i + ti;
-            int mj = g_active_tetr.j + tj;
+    for (unsigned int ti = 0; ti < g_tetr->dim; ti++) {
+        for (unsigned int tj = 0; tj < g_tetr->dim; tj++) {
+            if (!IS_EMPTY(TETR_ARR_VAL(g_tetr, ti, tj, r))) {
+                int mi = g_tetr_i + ti + di;
+                int mj = g_tetr_j + tj + dj;
 
-            if (tv != 0) {
                 if (mi < 0) {
                     continue;
                 }
@@ -164,9 +227,8 @@ bool collision()
                 ) {
                     return true;
                 }
-
-                uint mv = g_matrix[mi * MATRIX_WIDTH + mj];
-                if (mv != 0) {
+                
+                if (!IS_EMPTY(G_MATRIX_VAL(mi, mj))) {
                     return true;
                 }
             }
@@ -176,79 +238,48 @@ bool collision()
     return false;
 }
 
-void shuffle_bag()
-{
-    /* Reset bag. */
-
-    for (unsigned int i = 0; i < NUM_TETROMINOES; i++) {
-        g_bag[i] = i;
-    }
-
-    /* Fisher-Yates shuffle. */
-
-    for (unsigned int i = 0; i < NUM_TETROMINOES; i++) {
-        unsigned int j = rand() % (NUM_TETROMINOES - i);
-
-        unsigned int tmp = g_bag[i];
-        g_bag[i] = g_bag[i + j];
-        g_bag[i + j] = tmp;
-    }
-
-    g_bag_i = 0;
-}
-
 void set_active_tetr()
 {
-    unsigned int tl_i = g_bag[g_bag_i++];
-    memcpy(&g_active_tetr, TETR_LIST[tl_i], sizeof(tetromino_t));
-    if (g_bag_i >= NUM_TETROMINOES) {
-        shuffle_bag();
+    if (g_next_tetr == NULL) {
+        g_tetr = TETR_LIST[rand() % NUM_TETROMINOES];
+    } else {
+        g_tetr = g_next_tetr;
     }
+    g_next_tetr = TETR_LIST[rand() % NUM_TETROMINOES];
 
-    if (collision()) {
+    g_tetr_i = g_tetr->start_i;
+    g_tetr_j = g_tetr->start_j;
+    g_tetr_r = 0;
+
+    if (collision(0, 0, 0)) {
         g_state = LOSE_STATE;
     }
 }
 
 void try_rotate_cw()
 {
-    tetromino_t tmp;
-    memcpy(&tmp, &g_active_tetr, sizeof(tmp));
-
-    unsigned int k = 0;
-    for (unsigned int j = 0; j < g_active_tetr.dim; j++) {
-        for (int i = g_active_tetr.dim - 1; i >= 0; i--) {
-            g_active_tetr.arr[k++] = tmp.arr[i * g_active_tetr.dim + j];
-        }
-    }
-
-    if (collision()) {
-        memcpy(&g_active_tetr, &tmp, sizeof(g_active_tetr));
+    if (!collision(0, 0, 1)) {
+        g_tetr_r = (g_tetr_r + 1) % g_tetr->len;
     }
 }
 
 void try_move_down()
 {
-    g_active_tetr.i++;
-
-    if (collision()) {
-        g_active_tetr.i--;
-
+    if (!collision(1, 0, 0)) {
+        g_tetr_i++;
+    } else {
         /* Lock active tetromino to the matrix. */
 
-        for (unsigned int ti = 0; ti < g_active_tetr.dim; ti++) {
-            for (unsigned int tj = 0; tj < g_active_tetr.dim; tj++) {
-                int mi = g_active_tetr.i + ti;
-                int mj = g_active_tetr.j + tj;
+        for (unsigned int ti = 0; ti < g_tetr->dim; ti++) {
+            for (unsigned int tj = 0; tj < g_tetr->dim; tj++) {
+                int mi = g_tetr_i + ti;
+                int mj = g_tetr_j + tj;
                 if (
                     mi >= 0 && mi < MATRIX_HEIGHT &&
                     mj >= 0 && mj < MATRIX_WIDTH
                 ) {
-                    uint8_t tv = g_active_tetr.arr[ti * g_active_tetr.dim + tj];
-                    if (tv != 0) {
-                        g_matrix[mi * MATRIX_WIDTH + mj] = (
-                            tv * (g_active_tetr.id + 1)
-                        );
+                    if (!IS_EMPTY(TETR_ARR_VAL(g_tetr, ti, tj, g_tetr_r))) {
+                        G_MATRIX_VAL(mi, mj) = g_tetr->color_idx;
                     }
                 }
             }
@@ -259,13 +290,13 @@ void try_move_down()
         bool any_clear = false;
 
         for (
-            unsigned int mi = (g_active_tetr.i >= 0 ? g_active_tetr.i : 0);
-            mi < g_active_tetr.i + g_active_tetr.dim;
+            unsigned int mi = MAX(g_tetr_i, 0);
+            mi < MIN(g_tetr_i + g_tetr->dim, MATRIX_HEIGHT);
             mi++
         ) {
             bool cleared = true;
             for (unsigned int mj = 0; mj < MATRIX_WIDTH; mj++) {
-                if (g_matrix[mi * MATRIX_WIDTH + mj] == 0) {
+                if (IS_EMPTY(G_MATRIX_VAL(mi, mj))) {
                     cleared = false;
                     break;
                 }
@@ -289,28 +320,24 @@ void try_move_down()
 
 void try_move_left()
 {
-    g_active_tetr.j--;
-
-    if (collision()) {
-        g_active_tetr.j++;
+    if (!collision(0, -1, 0)) {
+        g_tetr_j--;
     }
 }
 
 void try_move_right()
 {
-    g_active_tetr.j++;
-
-    if (collision()) {
-        g_active_tetr.j--;
+    if (!collision(0, 1, 0)) {
+        g_tetr_j++;
     }
 }
 
 void init()
 {
-    memset(g_matrix, 0, sizeof(g_matrix));
+    memset(g_matrix, 0xFF, sizeof(g_matrix));
 
     srand(time(NULL));
-    shuffle_bag();
+    g_next_tetr = NULL;
     set_active_tetr();
 
     g_gravity_ctdown = GRAVITY;
@@ -348,7 +375,7 @@ void update(unsigned char inpt)
                         g_matrix,
                         i * MATRIX_WIDTH
                     );
-                    memset(g_matrix, 0, MATRIX_WIDTH);
+                    memset(g_matrix, 0xFF, MATRIX_WIDTH);
                 }
             }
 
@@ -370,47 +397,65 @@ void draw()
 
     /* Overlay active piece. */
 
-    for (unsigned int ti = 0; ti < g_active_tetr.dim; ti++) {
-        for (unsigned int tj = 0; tj < g_active_tetr.dim; tj++) {
-            int mi = g_active_tetr.i + ti;
-            int mj = g_active_tetr.j + tj;
+    for (unsigned int ti = 0; ti < g_tetr->dim; ti++) {
+        for (unsigned int tj = 0; tj < g_tetr->dim; tj++) {
+            int mi = g_tetr_i + ti;
+            int mj = g_tetr_j + tj;
             if (
                 mi >= 0 && mi < MATRIX_HEIGHT &&
                 mj >= 0 && mj < MATRIX_WIDTH
             ) {
-                uint8_t tv = g_active_tetr.arr[ti * g_active_tetr.dim + tj];
-                if (tv != 0) {
-                    draw_matrix[mi * MATRIX_WIDTH + mj] = (
-                        tv * (g_active_tetr.id + 1)
-                    );
+                if (!IS_EMPTY(TETR_ARR_VAL(g_tetr, ti, tj, g_tetr_r))) {
+                    draw_matrix[mi * MATRIX_WIDTH + mj] = g_tetr->color_idx;
                 }
             }
         }
     }
 
-    /* Reset cursor. */
-    printf(CSI(,H));
+    printf(CSI(,H)CSI(,J));
+
+    /* Draw board. */
 
     for (unsigned int i = 0; i < MATRIX_HEIGHT; i++) {
-        if (g_state == LINE_CLEAR_STATE) {
-            if (g_clears[i]) {
-                printf(SGR(7));
-            }
+        if (g_state == LINE_CLEAR_STATE && g_clears[i]) {
+            printf(SGR(7));
         }
 
         for (unsigned int j = 0; j < MATRIX_WIDTH; j++) {
-            printf(SGR(40));
-
             uint8_t dm_v = draw_matrix[i * MATRIX_WIDTH + j];
-            if (dm_v == 0) {
-                printf(SGR(90)"+-");
+            if (IS_EMPTY(dm_v)) {
+                printf(SGR(37;40)"+ ");
             } else {
-                printf(SGR(30)"%s[]", COLOR_LUT[dm_v]);
+                printf(SGR(%u;30)"[]", COLOR_LUT[dm_v + 12]);
             }
         }
 
-        printf(SGR(0)"\n");
+        printf(SGR(0)CSI(,E));
     }
+
+    /* Draw sidebar. */
+
+    printf(CSI(2;22,H));
+    printf(CSI(2;22,H)"LINES"CSI(3;22,H)"000");
+    printf(CSI(5;22,H)"SCORE"CSI(6;22,H)"000");
+
+    printf(CSI(8;22,H)"NEXT");
+    unsigned int di = abs(g_next_tetr->start_i);
+    for (unsigned int i = 0; i < g_next_tetr->dim - di; i++) {
+        printf(CSI(%u;22,H), 10 + i);
+        for (unsigned int j = 0; j < g_next_tetr->dim; j++) {
+            if (IS_EMPTY(TETR_ARR_VAL(g_next_tetr, i + di, j, 0))) {
+                printf(SGR(37;40)"  ");
+            } else {
+                printf(SGR(%u;30)"[]", COLOR_LUT[g_next_tetr->color_idx + 12]);
+            }
+        }
+        printf(SGR(0));
+    }
+
+    printf(CSI(13;22,H)"LEVEL"CSI(14;22,H)"000");
+
+    fflush(stdout);
 }
 
 
@@ -465,8 +510,6 @@ int main()
     
     /* Restore terminal cursor. */
     printf(CSI(?25, h));
-
-    fflush(stdout);
 
     /* Disable alternative buffer. */
     printf(CSI(?1049, l));
